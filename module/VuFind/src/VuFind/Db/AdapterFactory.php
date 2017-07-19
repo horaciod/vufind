@@ -132,7 +132,7 @@ class AdapterFactory
      * Obtain a Zend\DB connection using a connection string.
      *
      * @param string $connectionString Connection string of the form
-     * [db_type]://[username]:[password]@[host]/[db_name]
+     * [db_type]://[username]:[password]@[host]:[port]/[db_name]
      * @param string $overrideUser     Username override (leave null to use username
      * from connection string)
      * @param string $overridePass     Password override (leave null to use password
@@ -140,8 +140,7 @@ class AdapterFactory
      *
      * @return Adapter
      */
-    public function getAdapterFromConnectionString($connectionString,
-        $overrideUser = null, $overridePass = null
+    public function getAdapterFromConnectionString($connectionString, $overrideUser = null, $overridePass = null
     ) {
         list($type, $details) = explode('://', $connectionString);
         preg_match('/(.+)@([^@]+)\/(.+)/', $details, $matches);
@@ -156,6 +155,11 @@ class AdapterFactory
         }
         $username = !is_null($overrideUser) ? $overrideUser : $username;
         $password = !is_null($overridePass) ? $overridePass : $password;
+        $port = false;
+
+        if (strstr($host, ':')) {
+            list($host, $port) = explode(':', $host);
+        }
 
         // Set up default options:
         $options = [
@@ -165,9 +169,10 @@ class AdapterFactory
             'password' => $password,
             'database' => $dbName
         ];
-if (isset($this->config->Database->port ) ) {
-        $options['port']=$this->config->Database->port; 
-}
+
+        if ($port !== false) {
+            $options['port'] = $port;
+        }
         return $this->getAdapterFromOptions($options);
     }
 }
